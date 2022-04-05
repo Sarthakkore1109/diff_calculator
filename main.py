@@ -16,10 +16,12 @@ def read_csv(filename):
     # print(titles_df.shape)
 
     if filename == 'ori':
-        pathFile = path + "\data\ori\CLSSCHED.CSV"
-        print(pathFile)
+        pathFile = os.path.join(path, "data","ori","CLSSCHED.CSV")
+
+
+        print('pathFile is:',pathFile)
     elif filename == 'new':
-        pathFile = path + "\data\changed\CLSSCHED.CSV"
+        pathFile = os.path.join(path, "data","changed","CLSSCHED.CSV")
         print(pathFile)
 
     df = pd.read_csv(pathFile, header=None)
