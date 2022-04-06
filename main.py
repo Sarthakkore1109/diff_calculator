@@ -3,6 +3,8 @@ import csv
 import openpyxl
 import pandas as pd
 import os
+import time
+import datetime
 
 from openpyxl.styles import PatternFill
 
@@ -18,10 +20,24 @@ def read_csv(filename):
     if filename == 'ori':
         pathFile = os.path.join(path, "data","ori","CLSSCHED.CSV")
 
-
-        print('pathFile is:',pathFile)
+        try:
+            modified = os.path.getmtime(pathFile)
+            year, month, day, hour = time.localtime(modified)[:-5]
+            file_date = str(str(year)+'_'+str(month)+'_'+str(day))
+            print ("Original Date:",file_date)
+            print('pathFile is:',pathFile)
+        except:
+            file_date = time.ctime(os.path.getmtime(pathFile))
     elif filename == 'new':
         pathFile = os.path.join(path, "data","changed","CLSSCHED.CSV")
+        try:
+            modified = os.path.getmtime(pathFile)
+            year, month, day, hour = time.localtime(modified)[:-5]
+            file_date = str(str(year)+'_'+str(month)+'_'+str(day))
+            print ("New Date:",file_date)
+        except:
+            file_date = time.ctime(os.path.getmtime(pathFile))
+        print('pathFile is:',pathFile)
         print(pathFile)
 
     df = pd.read_csv(pathFile, header=None)
@@ -29,7 +45,7 @@ def read_csv(filename):
     print(df.iloc[0, 66])
     print(df)
 
-    return df
+    return df, file_date
 
 
 def grouping_rows(diff_out):
@@ -57,8 +73,8 @@ def colnumbertocolname(n):
 
 if __name__ == '__main__':
 
-    df_original_file = read_csv('ori')
-    df_modified_file = read_csv('new')
+    df_original_file, ori_date = read_csv('ori')
+    df_modified_file, new_date = read_csv('new')
 
     filtered_columns = [0, 4, 7, 15, 16, 17, 18, 19, 21, 23, 25, 27, 34, 35, 36, 38, 51, 53, 57, 66, 67, 81, 82, 83, 90,
                         91,
@@ -92,13 +108,15 @@ if __name__ == '__main__':
 
     df_changes = pd.concat([df_filtered_ori, df_filtered_mod]).drop_duplicates(keep=False)
     print(df_changes)
-    df_changes.to_csv('diff_out.csv', sep=',', index=False, header=False)
+    # out_path = os.path.join('data','diffs')
+    # os.chdir(out_path)
+    df_changes.to_csv(f'data/diffs/{ori_date}_{new_date}_diff_out.csv', sep=',', index=False, header=False)
 
     df_changes_arranged = pd.read_csv('diff_out.csv', header=None)
     print(df_changes_arranged)
     df_changes_arranged = df_changes_arranged.sort_values(
         by=[df_changes_arranged.columns[0], df_changes_arranged.columns[7]], ascending=True)
-    df_changes_arranged.to_csv('diff_out_arranged.csv', sep=',', index=False, header=False)
+    df_changes_arranged.to_csv(f'data/diffs/{ori_date}_{new_date}_diff_out_arranged.csv', sep=',', index=False, header=False)
 
     print(df_changes_arranged.shape)
     print(df_changes_arranged.shape[0])
