@@ -4,7 +4,6 @@ import openpyxl
 import pandas as pd
 import os
 import time
-import datetime
 
 from openpyxl.styles import PatternFill
 
@@ -42,8 +41,8 @@ def read_csv(filename):
 
     df = pd.read_csv(pathFile, header=None)
     # df1.columns = df.columns
-    print(df.iloc[0, 66])
-    print(df)
+    # print(df.iloc[0, 66])
+    # print(df)
 
     return df, file_date
 
@@ -75,6 +74,7 @@ if __name__ == '__main__':
 
     df_original_file, ori_date = read_csv('ori')
     df_modified_file, new_date = read_csv('new')
+    print('lenght of columns in new is', len(df_modified_file.columns))
 
     filtered_columns = [0, 4, 7, 15, 16, 17, 18, 19, 21, 23, 25, 27, 34, 35, 36, 38, 51, 53, 57, 66, 67, 81, 82, 83, 90,
                         91,
@@ -101,19 +101,21 @@ if __name__ == '__main__':
     # ne = (df_modified_file != df_original_file).any(1)
     # print(ne)
 
-    df_filtered_ori = df_original_file.iloc[:, filtered_columns]
-    df_filtered_mod = df_modified_file.iloc[:, filtered_columns]
+    df_filtered_ori = df_original_file.iloc[:]
+    df_filtered_mod = df_modified_file.iloc[:]
+    if len(df_modified_file.columns) > 140: #avoids applying filters to short files
+        print(len(df_modified_file.columns),'len(df_modified_file.columns)')
+        df_filtered_ori = df_original_file.iloc[:, filtered_columns]
+        df_filtered_mod = df_modified_file.iloc[:, filtered_columns]
 
     # output a gives all the differences and new rows
 
     df_changes = pd.concat([df_filtered_ori, df_filtered_mod]).drop_duplicates(keep=False)
-    print(df_changes)
-    # out_path = os.path.join('data','diffs')
-    # os.chdir(out_path)
+
     df_changes.to_csv(f'data/diffs/{ori_date}_{new_date}_diff_out.csv', sep=',', index=False, header=False)
 
     df_changes_arranged = pd.read_csv('diff_out.csv', header=None)
-    print(df_changes_arranged)
+
     df_changes_arranged = df_changes_arranged.sort_values(
         by=[df_changes_arranged.columns[0], df_changes_arranged.columns[7]], ascending=True)
     df_changes_arranged.to_csv(f'data/diffs/{ori_date}_{new_date}_diff_out_arranged.csv', sep=',', index=False, header=False)
@@ -166,7 +168,7 @@ if __name__ == '__main__':
     print(unique_id)
 
     df_changes_arranged.to_excel('out_excel.xlsx', index=False, header=False)
-
+    df_filtered_ori.to_csv('short_form_out.csv', index=False, header=False)
     '''changed_id_excel = []
     unique_id_excel = []
     tempString = ''
