@@ -47,10 +47,10 @@ def read_csv(filename):
     return df, file_date
 
 
-# def grouping_rows(diff_out):
-#     temp_dataframe = diff_out
-#     temp_dataframe = temp_dataframe.sort_values(by=['0'], ascending=False)
-#     temp_dataframe.to_csv('diff_out_arranged.csv', sep=',', index=False, header=False)
+def grouping_rows(diff_out):
+    temp_dataframe = diff_out
+    temp_dataframe = temp_dataframe.sort_values(by=['0'], ascending=False)
+    temp_dataframe.to_csv('diff_out_arranged.csv', sep=',', index=False, header=False)
 
 
 def highlighter(val):
@@ -74,8 +74,7 @@ if __name__ == '__main__':
 
     df_original_file, ori_date = read_csv('ori')
     df_modified_file, new_date = read_csv('new')
-    print('length of columns in new is', len(df_modified_file.columns))
-    print('length of columns in ori is', len(df_original_file.columns))
+    print('lenght of columns in new is', len(df_modified_file.columns))
 
     filtered_columns = [0, 4, 7, 15, 16, 17, 18, 19, 21, 23, 25, 27, 34, 35, 36, 38, 51, 53, 57, 66, 67, 81, 82, 83, 90,
                         91,
@@ -106,21 +105,16 @@ if __name__ == '__main__':
     df_filtered_mod = df_modified_file.iloc[:]
     if len(df_modified_file.columns) > 140: #avoids applying filters to short files
         print(len(df_modified_file.columns),'len(df_modified_file.columns)')
-        # df_filtered_ori = df_original_file.iloc[:, filtered_columns]
-        df_filtered_mod = df_modified_file.iloc[:, filtered_columns]
-
-    if len(df_original_file.columns) > 140: #avoids applying filters to short files
-        print(len(df_original_file.columns),'len(df_modified_file.columns)')
         df_filtered_ori = df_original_file.iloc[:, filtered_columns]
-        # df_filtered_mod = df_modified_file.iloc[:, filtered_columns]
+        df_filtered_mod = df_modified_file.iloc[:, filtered_columns]
 
     # output a gives all the differences and new rows
 
-    df_changes = pd.concat([df_filtered_ori, df_filtered_mod]).drop_duplicates(keep=False,ignore_index=True)
+    df_changes = pd.concat([df_filtered_ori, df_filtered_mod]).drop_duplicates(keep=False)
 
     df_changes.to_csv(f'data/diffs/{ori_date}_{new_date}_diff_out.csv', sep=',', index=False, header=False)
 
-    df_changes_arranged = pd.read_csv(f'data/diffs/{ori_date}_{new_date}_diff_out.csv', header=None)
+    df_changes_arranged = pd.read_csv('diff_out.csv', header=None)
 
     df_changes_arranged = df_changes_arranged.sort_values(
         by=[df_changes_arranged.columns[0], df_changes_arranged.columns[7]], ascending=True)
