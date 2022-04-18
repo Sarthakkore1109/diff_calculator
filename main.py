@@ -114,7 +114,7 @@ if __name__ == '__main__':
 
     df_changes.to_csv(f'data/diffs/{ori_date}_{new_date}_diff_out.csv', sep=',', index=False, header=False)
 
-    df_changes_arranged = pd.read_csv('diff_out.csv', header=None)
+    df_changes_arranged = pd.read_csv(f'data/diffs/{ori_date}_{new_date}_diff_out.csv', header=None)
 
     df_changes_arranged = df_changes_arranged.sort_values(
         by=[df_changes_arranged.columns[0], df_changes_arranged.columns[7]], ascending=True)
