@@ -5,8 +5,20 @@ import pandas as pd
 import os
 import time
 
+from openpyxl import Workbook
 from openpyxl.styles import PatternFill
+from openpyxl.utils.dataframe import dataframe_to_rows
+import decimal
 
+
+def format_number(num):
+    try:
+        dec = decimal.Decimal(num)
+    except:
+        return num
+
+    val = dec
+    return val
 
 def read_csv(filename):
     path = os.path.dirname(__file__)
@@ -47,33 +59,27 @@ def read_csv(filename):
     return df, file_date
 
 
-def grouping_rows(diff_out):
-    temp_dataframe = diff_out
-    temp_dataframe = temp_dataframe.sort_values(by=['0'], ascending=False)
-    temp_dataframe.to_csv('diff_out_arranged.csv', sep=',', index=False, header=False)
-
-
-def highlighter(val):
-    color = 'yellow' if val != '5.1' else '#C6E2E9'  # Pastel blue
-    return 'background-color: {}'.format(color)
-
-
-def colnumbertocolname(n):
-    n = n + 1
-    result = ''
-    while n > 0:
-        # here index 0 corresponds to `A`, and 25 corresponds to `Z`
-        index = (n - 1) % 26
-        result += chr(index + ord('A'))
-        n = (n - 1) // 26
-
-    return result[::-1]
-
-
 if __name__ == '__main__':
 
     df_original_file, ori_date = read_csv('ori')
     df_modified_file, new_date = read_csv('new')
+
+    # filtering out the dfs for CHEM
+    df_original_file = df_original_file.loc[df_original_file.iloc[:,14] == "CHEM"]
+    df_modified_file = df_modified_file.loc[df_modified_file.iloc[:,14] == "CHEM"]
+
+    #print('CHEMMMKMMMMM')
+    #print(df_original_file.shape[0])
+    #print(df_original_file.shape[1])
+
+    for i in range(df_original_file.shape[0]):
+        for j in range(df_original_file.shape[1]):
+            df_original_file.iloc[i,j] = format_number(df_original_file.iloc[i,j])
+
+    for i in range(df_modified_file.shape[0]):
+        for j in range(df_modified_file.shape[1]):
+            df_modified_file.iloc[i,j] = format_number(df_modified_file.iloc[i,j])
+
     print('lenght of columns in new is', len(df_modified_file.columns))
 
     filtered_columns = [0, 4, 7, 15, 16, 17, 18, 19, 21, 23, 25, 27, 34, 35, 36, 38, 51, 53, 57, 66, 67, 81, 82, 83, 90,
@@ -113,8 +119,10 @@ if __name__ == '__main__':
     df_changes = pd.concat([df_filtered_ori, df_filtered_mod]).drop_duplicates(keep=False)
 
     df_changes.to_csv(f'data/diffs/{ori_date}_{new_date}_diff_out.csv', sep=',', index=False, header=False)
+    #df_changes.to_csv('diff_out.csv', sep=',', index=False, header=False)
 
-    df_changes_arranged = pd.read_csv('diff_out.csv', header=None)
+    #df_changes_arranged = pd.read_csv('diff_out.csv', header=None)
+    df_changes_arranged = df_changes
 
     df_changes_arranged = df_changes_arranged.sort_values(
         by=[df_changes_arranged.columns[0], df_changes_arranged.columns[7]], ascending=True)
@@ -162,13 +170,12 @@ if __name__ == '__main__':
             else:
                 print("different rows detected" + str(i))
 
-
-
     print(changed_id)
     print(unique_id)
 
-    df_changes_arranged.to_excel('out_excel.xlsx', index=False, header=False)
+    #df_changes_arranged.to_excel('out_excel.xlsx', index=False, header=False)
     df_filtered_ori.to_csv('short_form_out.csv', index=False, header=False)
+
     '''changed_id_excel = []
     unique_id_excel = []
     tempString = ''
@@ -181,8 +188,12 @@ if __name__ == '__main__':
 
     print(changed_id_excel)'''
 
-    wb = openpyxl.load_workbook('out_excel.xlsx')
+    #wb = openpyxl.load_workbook('out_excel.xlsx')
+    wb = Workbook()
     ws = wb.active
+
+    for r in dataframe_to_rows(df_changes_arranged, index=False, header=False):
+        ws.append(r)
 
     fill_pattern_modified_content = PatternFill(patternType='solid', fgColor='ffaba6')
     fill_pattern_modified_content_darker = PatternFill(patternType='solid', fgColor='f03629')
