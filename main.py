@@ -20,6 +20,7 @@ def format_number(num):
     val = dec
     return val
 
+
 def read_csv(filename):
     path = os.path.dirname(__file__)
     print('File name :    ', os.path.basename(__file__))
@@ -59,6 +60,14 @@ def read_csv(filename):
     return df, file_date
 
 
+def duplicate_entry_merger(df):
+    #df.to_excel('diff_out_original.xlsx')
+    df = df.applymap(str)
+    df = df.groupby([df.columns[0],df.columns[7]]).agg(" ; ".join).reset_index()
+    #df.to_excel('diff_out.xlsx')
+    return df
+
+
 if __name__ == '__main__':
 
     df_original_file, ori_date = read_csv('ori')
@@ -80,7 +89,7 @@ if __name__ == '__main__':
         for j in range(df_modified_file.shape[1]):
             df_modified_file.iloc[i,j] = format_number(df_modified_file.iloc[i,j])
 
-    print('lenght of columns in new is', len(df_modified_file.columns))
+    #print('lenght of columns in new is', len(df_modified_file.columns))
 
     filtered_columns = [0, 4, 7, 15, 16, 17, 18, 19, 21, 23, 25, 27, 34, 35, 36, 38, 51, 53, 57, 66, 67, 81, 82, 83, 90,
                         91,
@@ -110,13 +119,21 @@ if __name__ == '__main__':
     df_filtered_ori = df_original_file.iloc[:]
     df_filtered_mod = df_modified_file.iloc[:]
     if len(df_modified_file.columns) > 140: #avoids applying filters to short files
-        print(len(df_modified_file.columns),'len(df_modified_file.columns)')
+        #print(len(df_modified_file.columns),'len(df_modified_file.columns)')
         df_filtered_ori = df_original_file.iloc[:, filtered_columns]
         df_filtered_mod = df_modified_file.iloc[:, filtered_columns]
 
     # output a gives all the differences and new rows
 
-    df_changes = pd.concat([df_filtered_ori, df_filtered_mod]).drop_duplicates(keep=False)
+    #df_changes = pd.concat([df_filtered_ori, df_filtered_mod]).drop_duplicates(keep=False)
+
+#----------------
+    df_filtered_ori = duplicate_entry_merger(df_filtered_ori)
+    df_filtered_mod = duplicate_entry_merger(df_filtered_mod)
+#----------------
+
+    df_changes = pd.concat([df_filtered_ori.assign(type='original'), df_filtered_mod.assign(type='modified')])
+    df_changes = df_changes.drop_duplicates(keep=False, subset=df_changes.columns.difference(['type']))
 
     df_changes.to_csv(f'data/diffs/{ori_date}_{new_date}_diff_out.csv', sep=',', index=False, header=False)
     #df_changes.to_csv('diff_out.csv', sep=',', index=False, header=False)
@@ -128,38 +145,43 @@ if __name__ == '__main__':
         by=[df_changes_arranged.columns[0], df_changes_arranged.columns[7]], ascending=True)
     df_changes_arranged.to_csv(f'data/diffs/{ori_date}_{new_date}_diff_out_arranged.csv', sep=',', index=False, header=False)
 
-    print(df_changes_arranged.shape)
-    print(df_changes_arranged.shape[0])
-    print(df_changes_arranged.shape[1])
+    #print(df_changes_arranged.shape)
+    #print(df_changes_arranged.shape[0])
+    #print(df_changes_arranged.shape[1])
 
     j = 0
     i = 0
     c = 0
     rows_count = df_changes_arranged.shape[0]
     cols_count = df_changes_arranged.shape[1]
-    print('rows_count:' + str(rows_count))
+    #print('rows_count:' + str(rows_count))
 
     changed_id = []
     unique_id = []
+
+    unique_id_from_ori = []
+    unique_id_from_mod = []
+
     red_color = 'background-color: red'
     green_color = 'background-color: lightgreen'
 
     for i in range(rows_count - 1):
         if ((df_changes_arranged.iloc[i, 0] == df_changes_arranged.iloc[i + 1, 0]) and (
-                df_changes_arranged.iloc[i, 7] == df_changes_arranged.iloc[i + 1, 7])) :
-            print("same rows detected" + str(i))
+                df_changes_arranged.iloc[i, 7] == df_changes_arranged.iloc[i + 1, 7])):
+            #print("same rows detected" + str(i))
             j = 0
 
             for c in range(cols_count):
-                if df_changes_arranged.iloc[i, c] != df_changes_arranged.iloc[i + 1, c]:
-                    print('--- diferent column' + str(c))
-                    changed_id.append([i, c])
-                    # changed_id.append([i + 1, c])
+                if c < 29:
+                    if df_changes_arranged.iloc[i, c] != df_changes_arranged.iloc[i + 1, c]:
+                        #print('--- different column' + str(c))
+                        changed_id.append([i, c])
+                        # changed_id.append([i + 1, c])
 
         else:
             j = j + 1
             if j >= 2:
-                print('unique row detected' + str(i))
+                #print('unique row detected' + str(i))
                 unique_id.append([i+1, 1])
                 j = 0
 
@@ -170,25 +192,6 @@ if __name__ == '__main__':
             else:
                 print("different rows detected" + str(i))
 
-    print(changed_id)
-    print(unique_id)
-
-    #df_changes_arranged.to_excel('out_excel.xlsx', index=False, header=False)
-    df_filtered_ori.to_csv('short_form_out.csv', index=False, header=False)
-
-    '''changed_id_excel = []
-    unique_id_excel = []
-    tempString = ''
-
-    for z in range(len(changed_id)):
-        temp_x = colnumbertocolname(changed_id[z][1])
-        temp_y = changed_id[z][0]
-        tempString = temp_x + str(temp_y)
-        changed_id_excel.append(tempString)
-
-    print(changed_id_excel)'''
-
-    #wb = openpyxl.load_workbook('out_excel.xlsx')
     wb = Workbook()
     ws = wb.active
 
@@ -199,13 +202,29 @@ if __name__ == '__main__':
     fill_pattern_modified_content_darker = PatternFill(patternType='solid', fgColor='f03629')
     fill_pattern_unique_content = PatternFill(patternType='solid', fgColor='61bdff')
 
+    fill_pattern_from_original = PatternFill(patternType='solid', fgColor='FFA500')
+    fill_pattern_from_modified = PatternFill(patternType='solid', fgColor='66CDAA')
+
+    #print('data/////')
+    #print(ws.cell(1,30).value)
+
+    for l in range(len(df_changes_arranged)):
+        if ws.cell(l+1,30).value == "original":
+            #print("original")
+            for p in range(cols_count):
+                ws.cell(l+1, p + 1).fill = fill_pattern_from_original
+        elif ws.cell(l+1,30).value == "modified":
+            #print("modified")
+            for p in range(cols_count):
+                ws.cell(l+1, p + 1).fill = fill_pattern_from_modified
+
     for i in range(len(changed_id)):
         ws.cell(changed_id[i][0] + 1, changed_id[i][1] + 1).fill = fill_pattern_modified_content
         ws.cell(changed_id[i][0] + 2, changed_id[i][1] + 1).fill = fill_pattern_modified_content_darker
 
-    for t in range(len(unique_id)):
+    '''for t in range(len(unique_id)):
         for p in range(cols_count):
-            ws.cell(unique_id[t][0], p + 1).fill = fill_pattern_unique_content
+            ws.cell(unique_id[t][0], p + 1).fill = fill_pattern_unique_content'''
 
     # ws.cell(1,2).fill = fill_pattern_modified_content
     # ws['V1'].fill = fill_pattern_modified_content
