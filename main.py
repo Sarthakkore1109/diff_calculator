@@ -9,6 +9,9 @@ from openpyxl import Workbook
 from openpyxl.styles import PatternFill
 from openpyxl.utils.dataframe import dataframe_to_rows
 import decimal
+from pathlib import Path
+from datetime import date
+import glob
 
 
 def format_number(num):
@@ -22,6 +25,10 @@ def format_number(num):
 
 
 def read_csv(filename):
+
+    latest_edited_file = max([f for f in os.scandir("diffs\\Spring 2022\\")], key=lambda x: x.stat().st_mtime).name
+    print(latest_edited_file)
+
     path = os.path.dirname(__file__)
     print('File name :    ', os.path.basename(__file__))
     print('Directory Name:     ', path)
@@ -30,28 +37,38 @@ def read_csv(filename):
     # print(titles_df.shape)
 
     if filename == 'ori':
-        pathFile = os.path.join(path, "data","ori","CLSSCHED.CSV")
+
+
+        latest_edited_file = max([f for f in os.scandir("data\\ori\\")], key=lambda x: x.stat().st_mtime).name
+        pathFile = os.path.join(path, "data", "ori", latest_edited_file)
+        #print(latest_edited_file)
 
         try:
             modified = os.path.getmtime(pathFile)
             year, month, day, hour = time.localtime(modified)[:-5]
-            file_date = str(str(year)+'_'+str(month)+'_'+str(day))
-            print ("Original Date:",file_date)
-            print('pathFile is:',pathFile)
+            file_date = str(str(year) + '_' + str(month) + '_' + str(day))
+            print("Original Date:", file_date)
+            print('pathFile is:', pathFile)
         except:
             file_date = time.ctime(os.path.getmtime(pathFile))
+
     elif filename == 'new':
-        pathFile = os.path.join(path, "data","changed","CLSSCHED.CSV")
+
+        latest_edited_file = max([f for f in os.scandir("data\\changed\\")], key=lambda x: x.stat().st_mtime).name
+        pathFile = os.path.join(path, "data", "changed", latest_edited_file)
+        #print(latest_edited_file)
+
         try:
             modified = os.path.getmtime(pathFile)
             year, month, day, hour = time.localtime(modified)[:-5]
-            file_date = str(str(year)+'_'+str(month)+'_'+str(day))
-            print ("New Date:",file_date)
+            file_date = str(str(year) + '_' + str(month) + '_' + str(day))
+            print("New Date:", file_date)
         except:
             file_date = time.ctime(os.path.getmtime(pathFile))
-        print('pathFile is:',pathFile)
+        print('pathFile is:', pathFile)
         print(pathFile)
 
+    #df = pd.read_csv(pathFile, header=None)
     df = pd.read_csv(pathFile, header=None)
     # df1.columns = df.columns
     # print(df.iloc[0, 66])
@@ -61,100 +78,77 @@ def read_csv(filename):
 
 
 def duplicate_entry_merger(df):
-    #df.to_excel('diff_out_original.xlsx')
+    # df.to_excel('diff_out_original.xlsx')
     df = df.applymap(str)
-    df = df.groupby([df.columns[0],df.columns[7]]).agg(" ; ".join).reset_index()
-    #df.to_excel('diff_out.xlsx')
+    df = df.groupby([df.columns[0], df.columns[7]]).agg(" ; ".join).reset_index()
+    # df.to_excel('diff_out.xlsx')
     return df
 
 
 if __name__ == '__main__':
 
+    today = date.today()
+
     df_original_file, ori_date = read_csv('ori')
     df_modified_file, new_date = read_csv('new')
 
     # filtering out the dfs for CHEM
-    df_original_file = df_original_file.loc[df_original_file.iloc[:,14] == "CHEM"]
-    df_modified_file = df_modified_file.loc[df_modified_file.iloc[:,14] == "CHEM"]
-
-    #print('CHEMMMKMMMMM')
-    #print(df_original_file.shape[0])
-    #print(df_original_file.shape[1])
+    df_original_file = df_original_file.loc[df_original_file.iloc[:, 14] == "CHEM"]
+    df_modified_file = df_modified_file.loc[df_modified_file.iloc[:, 14] == "CHEM"]
 
     for i in range(df_original_file.shape[0]):
         for j in range(df_original_file.shape[1]):
-            df_original_file.iloc[i,j] = format_number(df_original_file.iloc[i,j])
+            df_original_file.iloc[i, j] = format_number(df_original_file.iloc[i, j])
 
     for i in range(df_modified_file.shape[0]):
         for j in range(df_modified_file.shape[1]):
-            df_modified_file.iloc[i,j] = format_number(df_modified_file.iloc[i,j])
-
-    #print('lenght of columns in new is', len(df_modified_file.columns))
+            df_modified_file.iloc[i, j] = format_number(df_modified_file.iloc[i, j])
 
     filtered_columns = [0, 4, 7, 15, 16, 17, 18, 19, 21, 23, 25, 27, 34, 35, 36, 38, 51, 53, 57, 66, 67, 81, 82, 83, 90,
                         91,
                         97, 110, 112]
 
-    """ori_column = df_original_file.shape[1]
-    ori_rows = df_original_file.shape[0]
-
-    print('orginal data : columns ' + str(ori_column) + ' rows' + str(ori_rows))
-
-    mod_column = df_modified_file.shape[1]
-    mod_rows = df_modified_file.shape[0]
-
-    print('mod data : columns ' + str(mod_column) + ' rows' + str(mod_rows))
-
-    #df_changes_list = pd.DataFrame(columns=['rows','columns'])
-
-    if ori_column == mod_column and ori_rows == mod_rows:
-        for i in range(0, ori_column - 1 ):
-            for j in range(0, ori_rows-1 ):
-                if df_original_file.iloc[j,i] != df_modified_file.iloc[j,i]:
-                    df_changes_list.append()"""
-
-    # ne = (df_modified_file != df_original_file).any(1)
-    # print(ne)
-
     df_filtered_ori = df_original_file.iloc[:]
     df_filtered_mod = df_modified_file.iloc[:]
-    if len(df_modified_file.columns) > 140: #avoids applying filters to short files
-        #print(len(df_modified_file.columns),'len(df_modified_file.columns)')
+    if len(df_modified_file.columns) > 140:  # avoids applying filters to short files
+        # print(len(df_modified_file.columns),'len(df_modified_file.columns)')
         df_filtered_ori = df_original_file.iloc[:, filtered_columns]
         df_filtered_mod = df_modified_file.iloc[:, filtered_columns]
 
-    # output a gives all the differences and new rows
+    term = df_filtered_mod.iloc[0, 1]
+    print('term' + term)
 
-    #df_changes = pd.concat([df_filtered_ori, df_filtered_mod]).drop_duplicates(keep=False)
+    Path("diffs/" + term).mkdir(parents=True, exist_ok=True)
 
-#----------------
+    # ----------------
     df_filtered_ori = duplicate_entry_merger(df_filtered_ori)
     df_filtered_mod = duplicate_entry_merger(df_filtered_mod)
-#----------------
+    # ----------------
 
     df_changes = pd.concat([df_filtered_ori.assign(type='original'), df_filtered_mod.assign(type='modified')])
     df_changes = df_changes.drop_duplicates(keep=False, subset=df_changes.columns.difference(['type']))
 
     df_changes.to_csv(f'data/diffs/{ori_date}_{new_date}_diff_out.csv', sep=',', index=False, header=False)
-    #df_changes.to_csv('diff_out.csv', sep=',', index=False, header=False)
+    # df_changes.to_csv('diff_out.csv', sep=',', index=False, header=False)
 
-    #df_changes_arranged = pd.read_csv('diff_out.csv', header=None)
+    # df_changes_arranged = pd.read_csv('diff_out.csv', header=None)
     df_changes_arranged = df_changes
 
     df_changes_arranged = df_changes_arranged.sort_values(
         by=[df_changes_arranged.columns[0], df_changes_arranged.columns[7]], ascending=True)
-    df_changes_arranged.to_csv(f'data/diffs/{ori_date}_{new_date}_diff_out_arranged.csv', sep=',', index=False, header=False)
+    df_changes_arranged.to_csv(f'data/diffs/{ori_date}_{new_date}_diff_out_arranged.csv', sep=',', index=False,
+                               header=False)
 
-    #print(df_changes_arranged.shape)
-    #print(df_changes_arranged.shape[0])
-    #print(df_changes_arranged.shape[1])
+    # print(df_changes_arranged.shape)
+    # print(df_changes_arranged.shape[0])
+    # print(df_changes_arranged.shape[1])
 
     j = 0
     i = 0
     c = 0
     rows_count = df_changes_arranged.shape[0]
     cols_count = df_changes_arranged.shape[1]
-    #print('rows_count:' + str(rows_count))
+    # print('rows_count:' + str(rows_count))
 
     changed_id = []
     unique_id = []
@@ -168,21 +162,21 @@ if __name__ == '__main__':
     for i in range(rows_count - 1):
         if ((df_changes_arranged.iloc[i, 0] == df_changes_arranged.iloc[i + 1, 0]) and (
                 df_changes_arranged.iloc[i, 7] == df_changes_arranged.iloc[i + 1, 7])):
-            #print("same rows detected" + str(i))
+            # print("same rows detected" + str(i))
             j = 0
 
             for c in range(cols_count):
                 if c < 29:
                     if df_changes_arranged.iloc[i, c] != df_changes_arranged.iloc[i + 1, c]:
-                        #print('--- different column' + str(c))
+                        # print('--- different column' + str(c))
                         changed_id.append([i, c])
                         # changed_id.append([i + 1, c])
 
         else:
             j = j + 1
             if j >= 2:
-                #print('unique row detected' + str(i))
-                unique_id.append([i+1, 1])
+                # print('unique row detected' + str(i))
+                unique_id.append([i + 1, 1])
                 j = 0
 
             elif i == rows_count - 2:
@@ -205,28 +199,21 @@ if __name__ == '__main__':
     fill_pattern_from_original = PatternFill(patternType='solid', fgColor='FFA500')
     fill_pattern_from_modified = PatternFill(patternType='solid', fgColor='66CDAA')
 
-    #print('data/////')
-    #print(ws.cell(1,30).value)
+    # print('data/////')
+    # print(ws.cell(1,30).value)
 
     for l in range(len(df_changes_arranged)):
-        if ws.cell(l+1,30).value == "original":
-            #print("original")
+        if ws.cell(l + 1, 30).value == "original":
+            # print("original")
             for p in range(cols_count):
-                ws.cell(l+1, p + 1).fill = fill_pattern_from_original
-        elif ws.cell(l+1,30).value == "modified":
-            #print("modified")
+                ws.cell(l + 1, p + 1).fill = fill_pattern_from_original
+        elif ws.cell(l + 1, 30).value == "modified":
+            # print("modified")
             for p in range(cols_count):
-                ws.cell(l+1, p + 1).fill = fill_pattern_from_modified
+                ws.cell(l + 1, p + 1).fill = fill_pattern_from_modified
 
     for i in range(len(changed_id)):
         ws.cell(changed_id[i][0] + 1, changed_id[i][1] + 1).fill = fill_pattern_modified_content
         ws.cell(changed_id[i][0] + 2, changed_id[i][1] + 1).fill = fill_pattern_modified_content_darker
 
-    '''for t in range(len(unique_id)):
-        for p in range(cols_count):
-            ws.cell(unique_id[t][0], p + 1).fill = fill_pattern_unique_content'''
-
-    # ws.cell(1,2).fill = fill_pattern_modified_content
-    # ws['V1'].fill = fill_pattern_modified_content
-
-    wb.save("colored_output.xlsx")
+    wb.save("diffs/" + term + "/" + today.isoformat() + "_output.xlsx")
