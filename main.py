@@ -23,33 +23,13 @@ def format_number(num):
     val = dec
     return val
 
-def latest_edited_file_glob(pathToDir):
-    pathTest = os.path.dirname(__file__)
-
-    if pathToDir == 'ori':
-        list_of_files = glob.glob(
-            os.path.join(pathTest, "data", "ori" + '\*'))  # * means all if need specific format then *.csv
-        latest_file = max(list_of_files, key=os.path.getctime)
-        print("glob latest_file:" + latest_file)
-    elif pathToDir == 'changed':
-        list_of_files = glob.glob(
-            os.path.join(pathTest, "data", "changed" + '\*'))  # * means all if need specific format then *.csv
-        latest_file = max(list_of_files, key=os.path.getctime)
-        print("glob latest_file:" + latest_file)
-    else:
-        list_of_files = glob.glob(
-            os.path.join(pathTest, "diffs", "Spring 2022" + '\*'))  # * means all if need specific format then *.csv
-        latest_file = max(list_of_files, key=os.path.getctime)
-        print("glob latest_file:" + latest_file)
-
-    return latest_file
-
 
 def read_csv(filename):
-    #pathTest = os.path.dirname(__file__)
+    pathTest = os.path.dirname(__file__)
     #latest_edited_file = max([f for f in os.scandir(os.path.join(pathTest, "diffs", "Spring 2022"))], key=lambda x: x.stat().st_mtime).name
     #print(latest_edited_file)
-    latest_edited_file_glob('test')
+
+
 
     path = os.path.dirname(__file__)
     print('File name :    ', os.path.basename(__file__))
@@ -59,10 +39,8 @@ def read_csv(filename):
     # print(titles_df.shape)
 
     if filename == 'ori':
-        #latest_edited_file = max([f for f in os.scandir(os.path.join(path, "data", "ori"))], key=lambda x: x.stat().st_mtime).name
-        #pathFile = os.path.join(path, "data", "ori", latest_edited_file)
-
-        pathFile = latest_edited_file_glob('ori')
+        latest_edited_file = max([f for f in os.scandir(os.path.join(path, "data", "ori"))], key=lambda x: x.stat().st_mtime).name
+        pathFile = os.path.join(path, "data", "ori", latest_edited_file)
         #print(latest_edited_file)
 
         try:
@@ -76,11 +54,8 @@ def read_csv(filename):
 
     elif filename == 'new':
 
-        #latest_edited_file = max([f for f in os.scandir(os.path.join(path, "data", "changed"))], key=lambda x: x.stat().st_mtime).name
-        #pathFile = os.path.join(path, "data", "changed", latest_edited_file)
-
-        pathFile = latest_edited_file_glob('changed')
-
+        latest_edited_file = max([f for f in os.scandir(os.path.join(path, "data", "changed"))], key=lambda x: x.stat().st_mtime).name
+        pathFile = os.path.join(path, "data", "changed", latest_edited_file)
         #print(latest_edited_file)
 
         try:
