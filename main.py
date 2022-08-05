@@ -1,11 +1,10 @@
 import csv
 
-import openpyxl
+from openpyxl import load_workbook, Workbook
 import pandas as pd
 import os
 import time
 
-from openpyxl import Workbook
 from openpyxl.styles import PatternFill
 from openpyxl.utils.dataframe import dataframe_to_rows
 import decimal
@@ -86,6 +85,8 @@ def read_csv(filename):
         try:
             modified = os.path.getmtime(pathFile)
             year, month, day, hour = time.localtime(modified)[:-5]
+            file_date = str(str(year)+'_'+str(month)+'_'+str(day))
+            print ("New Date:", file_date)
             file_date = str(str(year) + '_' + str(month) + '_' + str(day))
             print("New Date:", file_date)
         except:
