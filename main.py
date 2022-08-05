@@ -28,17 +28,17 @@ def latest_edited_file_glob(pathToDir):
 
     if pathToDir == 'ori':
         list_of_files = glob.glob(
-            os.path.join(pathTest, "data", "ori" + '\*'))  # * means all if need specific format then *.csv
+            os.path.join(pathTest, "data", "ori", '*'))  # * means all if need specific format then *.csv
         latest_file = max(list_of_files, key=os.path.getctime)
         print("glob latest_file:" + latest_file)
     elif pathToDir == 'changed':
         list_of_files = glob.glob(
-            os.path.join(pathTest, "data", "changed" + '\*'))  # * means all if need specific format then *.csv
+            os.path.join(pathTest, "data", "changed", '*'))  # * means all if need specific format then *.csv
         latest_file = max(list_of_files, key=os.path.getctime)
         print("glob latest_file:" + latest_file)
     else:
         list_of_files = glob.glob(
-            os.path.join(pathTest, "diffs", "Spring 2022" + '\*'))  # * means all if need specific format then *.csv
+            os.path.join(pathTest, "color_diffs", "Spring 2022", '*'))  # * means all if need specific format then *.csv
         latest_file = max(list_of_files, key=os.path.getctime)
         print("glob latest_file:" + latest_file)
 
@@ -143,7 +143,7 @@ if __name__ == '__main__':
     term = df_filtered_mod.iloc[0, 1]
     print('term' + term)
 
-    Path("diffs/" + term).mkdir(parents=True, exist_ok=True)
+    Path("color_diffs/" + term).mkdir(parents=True, exist_ok=True)
 
     # ----------------
     df_filtered_ori = duplicate_entry_merger(df_filtered_ori)
@@ -241,4 +241,4 @@ if __name__ == '__main__':
         ws.cell(changed_id[i][0] + 1, changed_id[i][1] + 1).fill = fill_pattern_modified_content
         ws.cell(changed_id[i][0] + 2, changed_id[i][1] + 1).fill = fill_pattern_modified_content_darker
 
-    wb.save("diffs/" + term + "/" + today.isoformat() + "_output.xlsx")
+    wb.save("color_diffs/" + term + "/" + today.isoformat() + "_output.xlsx")
