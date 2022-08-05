@@ -26,7 +26,7 @@ def format_number(num):
 
 def read_csv(filename):
     pathTest = os.path.dirname(__file__)
-    #latest_edited_file = max([f for f in os.scandir(os.path.join(pathTest, "diffs", "Spring 2022"))], key=lambda x: x.stat().st_mtime).name
+    latest_edited_file = max([f for f in os.scandir(os.path.join(pathTest, "diffs", "Spring 2022"))], key=lambda x: x.stat().st_mtime).name
     #print(latest_edited_file)
 
 
