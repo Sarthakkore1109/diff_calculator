@@ -1,6 +1,5 @@
-import csv
 
-from openpyxl import load_workbook, Workbook
+from openpyxl import Workbook
 import pandas as pd
 import os
 import time
